@@ -15,10 +15,22 @@ SOURCE_DIR := ../source
 OBJECT_DIR := ../object
 BINARY_DIR := ../binary
 
+# These are the source files and object files for the debug library
+DEBUG_DIR := $(SOURCE_DIR)/debug
+
+DEBUG_SOURCE_FILES := $(wildcard $(DEBUG_DIR)/*.c)
+DEBUG_OBJECT_FILES := $(addprefix $(OBJECT_DIR)/, $(notdir $(DEBUG_SOURCE_FILES:.c=.o)))
+
+# These are the source files and object files for the network library
+NETWORK_DIR := $(SOURCE_DIR)/network
+
+NETWORK_SOURCE_FILES := $(wildcard $(NETWORK_DIR)/*.c)
+NETWORK_OBJECT_FILES := $(addprefix $(OBJECT_DIR)/, $(notdir $(NETWORK_SOURCE_FILES:.c=.o)))
+
 all: master
 
-%: $(OBJECT_DIR)/%.o $(SOURCE_DIR)/%.c
-	$(COMPILER) $(OBJECT_DIR)/$@.o $(LINKER_FLAGS) -o $(BINARY_DIR)/$@
+%: $(OBJECT_DIR)/%.o $(SOURCE_DIR)/%.c $(DEBUG_OBJECT_FILES) $(DEBUG_SOURCE_FILES) $(NETWORK_OBJECT_FILES) $(NETWORK_SOURCE_FILES)
+	$(COMPILER) $(OBJECT_DIR)/$@.o $(DEBUG_OBJECT_FILES) $(NETWORK_OBJECT_FILES) $(LINKER_FLAGS) -o $(BINARY_DIR)/$@
 
 # These are rules for compiling object files out of source files
 $(OBJECT_DIR)/%.o: $(SOURCE_DIR)/*/%.c 
