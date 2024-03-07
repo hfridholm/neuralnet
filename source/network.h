@@ -1,6 +1,11 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#include "debug.h"
+
+#include <stddef.h>
+#include <stdlib.h>
+
 // This are identifiers for different activation functions
 typedef enum { ACTIV_NONE, ACTIVE_SIGMOID, ACTIVE_RELU, ACTIVE_TANH, ACTIVE_SOFTMAX } activ_t;
 
@@ -22,5 +27,9 @@ typedef struct
   float learnrate;      // The learning rate
   float momentum;       // The momentum
 } Network;
+
+extern int network_init(Network* network, size_t amount, const size_t* amounts, const activ_t* activs, float learnrate, float momentum);
+
+extern void network_free(Network* network);
 
 #endif // NETWORK_H
