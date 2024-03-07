@@ -18,9 +18,15 @@ int main(int argc, char* argv[])
 
   Network network;
 
-  network.inputs = 2;
+  size_t amount = 3;
+  size_t amounts[] = {2, 3, 1};
+  activ_t activs[] = {ACTIV_NONE, ACTIVE_SIGMOID};
+  float learnrate = 0.03;
+  float momentum = 0.2;
 
-  info_print("Network Layers: %d", network.inputs);
+  network_init(&network, amount, amounts, activs, learnrate, momentum);
+
+  network_free(&network);
 
   return 0;
 }
