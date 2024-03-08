@@ -37,4 +37,8 @@ extern int network_init(Network* network, size_t amount, const size_t* amounts, 
 
 extern void network_free(Network* network);
 
+extern int network_forward(float* outputs, Network network, const float* inputs);
+
+extern int network_train_stcast_epochs(Network* network, float** inputs, float** targets, size_t amount, size_t epochs);
+
 #endif // PERSUE_H

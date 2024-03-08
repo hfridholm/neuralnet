@@ -42,7 +42,7 @@ extern float*   float_vector_scale_addit(float* result, const float* vector, siz
 
 extern float*   float_vector_elem_multi(float* result, const float* vector1, const float* vector2, size_t length);
 
-extern float*   float_vector_elements_add(float* result, const float* vector1, const float* vector2, size_t length);
+extern float*   float_vector_elem_addit(float* result, const float* vector1, const float* vector2, size_t length);
 
 
 extern float**  float_vector_dotprod(float** result, const float* vector1, size_t length1, const float* vector2, size_t length2);

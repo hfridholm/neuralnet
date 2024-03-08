@@ -167,7 +167,7 @@ float* float_vector_elem_multi(float* result, const float* vector1, const float*
  * - SUCCESS | The vector with added values
  * - ERROR   | NULL
  */
-float* float_vector_elements_add(float* result, const float* vector1, const float* vector2, size_t length)
+float* float_vector_elem_addit(float* result, const float* vector1, const float* vector2, size_t length)
 {
   if(result == NULL || vector1 == NULL || vector2 == NULL) return NULL;
 
