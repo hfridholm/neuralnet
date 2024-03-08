@@ -244,35 +244,6 @@ float** float_matrix_vector_addit(float** result, float** matrix, const float* v
 }
 
 /*
- * Return the dot product of to matricies with different sizes
- *
- * Note: Maybe just return either result or NULL
- *
- * RETURN
- * - 0 | Success!
- * - 1 | An inputted pointer was NULL
- * - 2 | The width of matrix1 did not match the height of matrix2
- */
-int float_matrix_dotprod(float** result, float** matrix1, size_t height1, size_t width1, float** matrix2, size_t height2, size_t width2)
-{
-  if(result == NULL || matrix1 == NULL || matrix2 == NULL) return 1;
-
-  if(width1 != height2) return 2;
-
-  for(size_t hIndex = 0; hIndex < height1; hIndex++)
-  {
-    for(size_t wIndex = 0; wIndex < width2; wIndex++)
-    {
-      for(size_t index = 0; index < width1; index++)
-      {
-        result[hIndex][wIndex] += (matrix1[hIndex][index] * matrix2[index][wIndex]);
-      }
-    }
-  }
-  return 0; // Success!
-}
-
-/*
  * Return the dot product of a matrix and a vector with different lengths
  *
  * Note: Maybe just return either result or NULL

@@ -16,6 +16,8 @@ size_t network_max_layer_nodes(Network network)
 
 int network_forward(float* outputs, Network network, const float* inputs)
 {
+  if(outputs == NULL || inputs == NULL) return 1;
+
   size_t maxSize = network_max_layer_nodes(network);
 
   float tempOutputs[maxSize];

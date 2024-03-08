@@ -88,8 +88,6 @@ extern float*   float_matrix_column_vector(float* vector, float** matrix, size_t
 extern float**  float_matrix_vector_addit(float** result, float** matrix, const float* vector, size_t height, size_t width);
 
 // Dotprod
-extern int      float_matrix_dotprod(float** result, float** matrix1, size_t height1, size_t width1, float** matrix2, size_t height2, size_t width2);
-
 extern int      float_matrix_vector_dotprod(float* result, float** matrix, size_t height, size_t width, const float* vector);
 
 // Convert
@@ -100,36 +98,8 @@ extern float*   float_matrix_cnvrt_vector(float* vector, float** matrix, size_t 
 // Print
 extern void     float_matrix_print(float** matrix, size_t height, size_t width);
 
-// Float Matarr
-
-extern float*** float_matarr_create(size_t amount, size_t height, size_t width);
-
-extern void     float_matarr_free(float**** matarr, size_t amount, size_t height, size_t width);
-
-// Copy
-extern float*** float_matarr_copy(float*** destin, float*** source, size_t amount, size_t height, size_t width);
-
-// Random
-extern float*** float_matarr_random_create(size_t amount, size_t height, size_t width, float min, float max);
-
-extern float*** float_matarr_random_fill(float*** matarr, size_t amount, size_t height, size_t width, float min, float max);
-
-// 
-extern float*** float_matarr_scale_multi(float*** result, float*** matarr, size_t amount, size_t height, size_t width, float scalor);
-
-extern float*** float_matarr_elem_addit(float*** result, float*** matarr1, float*** matarr2, size_t amount, size_t height, size_t width);
-
-// Print
-extern void     float_matarr_print(float*** matarr, size_t amount, size_t height, size_t width);
-
 // Index Array
 
-extern size_t   index_random_create(size_t min, size_t max);
-
-extern size_t*  index_array_create(size_t amount);
-
-extern void     index_array_free(size_t** array, size_t amount);
-
-extern size_t*  index_array_shuffle(size_t* array, size_t amount);
+extern size_t* index_array_shuffled_fill(size_t* array, size_t amount);
 
 #endif // SECURE_H
