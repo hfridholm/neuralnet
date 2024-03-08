@@ -19,6 +19,9 @@ typedef struct
   float** weights; // The weights for this layers nodes
   float* biases;   // The biases for this layers nodes
   activ_t activ;   // The activation function identifier
+  // This data is keept for use of the momentum
+  float** wdeltas; // The delta values of the weight derivatives
+  float* bdeltas;  // The delta values of the bias derivatives
 } NetworkLayer;
 
 typedef struct
