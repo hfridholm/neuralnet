@@ -4,84 +4,118 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/*
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
-*/
+
+extern size_t network_max_layer_nodes(Network network);
 
 int main(int argc, char* argv[])
 {
   srand(time(NULL));
 
-  error_print("Neural Network");
+  info_print("Neural Network");
 
-  printf("Random float: %.2f\n", float_random_create(0, 100));
+  char imgPath[] = "../assets/smilie.png";
+
+  size_t imgWidth, imgHeight;
+  float** matrix = image_values_matrix_read(&imgWidth, &imgHeight, imgPath);
+
+  if(matrix == NULL)
+  {
+    error_print("Failed to read image\n");
+
+    return 1;
+  }
+
+
+  float** inputs = float_matrix_create(imgWidth * imgHeight, 2);
+  float** targets = float_matrix_create(imgWidth * imgHeight, 1);
+
+  float_matrix_filter_index(inputs, matrix, imgWidth * imgHeight, 3, (int[]) {0, 1}, 2);
+  float_matrix_filter_index(targets, matrix, imgWidth * imgHeight, 3, (int[]) {2}, 1);
+
 
   Network network;
 
-  size_t amount = 3;
-  size_t amounts[] = {2, 8, 1};
-  activ_t activs[] = {ACTIV_SIGMOID, ACTIV_SIGMOID};
-  float learnrate = 0.1;
-  float momentum = 0.0;
+  size_t amount = 7;
+  size_t amounts[] = {2, 8, 8, 16, 8, 8, 1};
+  activ_t activs[] = {ACTIV_RELU, ACTIV_RELU, ACTIV_RELU, ACTIV_RELU, ACTIV_RELU, ACTIV_SIGMOID};
+  float learnrate = 0.0009;
+  float momentum = 0.1;
 
-  network_init(&network, amount, amounts, activs, learnrate, momentum);
+  int status = network_init(&network, amount, amounts, activs, learnrate, momentum);
 
-  float tinputs[4][2] = {{1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f}};
-  float ttargets[4][1] = {{0.0f}, {0.0f}, {0.0f}, {1.0f}};
+  if(status != 0) error_print("network_init");
 
-  float** inputs = float_matrix_create(4, 2);
-  float** targets = float_matrix_create(4, 1);
+  network_print(network);
 
-  for(size_t index = 0; index < 4; index++)
+
+  network_train_stcast_epochs(&network, inputs, targets, imgWidth * imgHeight, 1000);
+
+
+  float cost = 0;
+
+  for(size_t yValue = 0; yValue < imgHeight; yValue++)
   {
-    inputs[index][0] = tinputs[index][0];
-    inputs[index][1] = tinputs[index][1];
+    for(size_t xValue = 0; xValue < imgWidth; xValue++)
+    {
+      float outputs[1];
 
-    targets[index][0] = ttargets[index][0];
+      float normX = (float) xValue / (imgWidth - 1);
+      float normY = (float) yValue / (imgHeight - 1);
+
+      float outInputs[2] = {normX, normY};
+
+      network_forward(outputs, network, outInputs);
+
+      size_t index = (yValue * imgWidth + xValue);
+
+      cost += cross_entropy_cost(outputs, targets[index], 1);
+    }
+  }
+  cost /= (imgHeight * imgWidth);
+
+  printf("Mean Cost: %f\n", cost);
+
+  
+  size_t outWidth = 256;
+  size_t outHeight = 256;
+
+  float* outPixels = float_vector_create(outWidth * outHeight);
+
+  for(size_t yValue = 0; yValue < outHeight; yValue++)
+  {
+    for(size_t xValue = 0; xValue < outWidth; xValue++)
+    {
+      float outputs[1];
+
+      float normX = (float) xValue / (outWidth - 1);
+      float normY = (float) yValue / (outHeight - 1);
+
+      float outInputs[2] = {normX, normY};
+
+      network_forward(outputs, network, outInputs);
+
+      size_t index = (yValue * outWidth + xValue);
+
+      outPixels[index] = outputs[0];
+    }
   }
 
-  for(size_t index = 0; index < 4; index++)
-  {
-    float outputs[1];
+  char outputPath[128] = "result.png";
 
-    network_forward(outputs, network, inputs[index]);
+  image_values_write(outputPath, outPixels, outWidth, outHeight);
 
-    printf("[%.1f %.1f] => [%f] (%.1f)\n", inputs[index][0], inputs[index][1], outputs[0], targets[index][0]);
-  }
+  float_vector_free(&outPixels, outWidth * outHeight);
 
-  size_t outputAmount = network.layers[network.amount - 1].amount;
 
-  float toutputs[outputAmount];
+  float_matrix_free(&inputs, imgWidth * imgHeight, 2);
+  float_matrix_free(&targets, imgWidth * imgHeight, 1);
 
-  network_forward(toutputs, network, inputs[0]);
-  printf("===== WEIGHTS BEFORE =====\n");
-  float_matrix_print(network.layers[0].weights, network.layers[0].amount, network.inputs);
-  printf("===== WEIGHTS BEFORE END =====\n");
-  printf("Cost: %.2f\n", cross_entropy_cost(toutputs, targets[0], outputAmount));
-
-  network_train_stcast_epochs(&network, inputs, targets, 4, 1000);
-
-  network_forward(toutputs, network, inputs[0]);
-  printf("===== WEIGHTS AFTER =====\n");
-  float_matrix_print(network.layers[0].weights, network.layers[0].amount, network.inputs);
-  printf("===== WEIGHTS AFTER END =====\n");
-  printf("Cost: %.2f\n", cross_entropy_cost(toutputs, targets[0], outputAmount));
-
-  for(size_t index = 0; index < 4; index++)
-  {
-    float outputs[1];
-
-    network_forward(outputs, network, inputs[index]);
-
-    printf("[%.1f %.1f] => [%f] (%.1f)\n", inputs[index][0], inputs[index][1], outputs[0], targets[index][0]);
-  }
-
-  float_matrix_free(&inputs, 4, 2);
-  float_matrix_free(&targets, 4, 1);
+  float_matrix_free(&matrix, imgWidth * imgHeight, 3);
 
   network_free(&network);
 

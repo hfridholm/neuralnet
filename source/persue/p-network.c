@@ -21,6 +21,9 @@ int network_forward(float* outputs, Network network, const float* inputs)
   size_t maxSize = network_max_layer_nodes(network);
 
   float toutputs[maxSize];
+  // For some reason, not setting values leads to uninitialized values?
+  memset(toutputs, 0.0f, sizeof(float) * maxSize);
+
   float_vector_copy(toutputs, inputs, network.inputs);
 
   size_t width = network.inputs;
@@ -156,4 +159,18 @@ void network_free(Network* network)
   free(network->layers);
 
   network->layers = NULL;
+}
+
+void network_print(Network network)
+{
+  printf("%ld ", network.inputs);
+
+  for(size_t index = 0; index < network.amount; index++)
+  {
+    printf("%ld ", network.layers[index].amount);
+  }
+  printf("\n");
+
+  printf("learnrate : %f\n", network.learnrate);
+  printf("momentum  : %f\n", network.momentum);
 }
