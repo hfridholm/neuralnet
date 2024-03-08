@@ -15,22 +15,28 @@ SOURCE_DIR := ../source
 OBJECT_DIR := ../object
 BINARY_DIR := ../binary
 
-# These are the source files and object files for the debug library
-DEBUG_DIR := $(SOURCE_DIR)/debug
+# These are the source files and object files for the review library
+REVIEW_DIR := $(SOURCE_DIR)/review
 
-DEBUG_SOURCE_FILES := $(wildcard $(DEBUG_DIR)/*.c)
-DEBUG_OBJECT_FILES := $(addprefix $(OBJECT_DIR)/, $(notdir $(DEBUG_SOURCE_FILES:.c=.o)))
+REVIEW_SOURCE_FILES := $(wildcard $(REVIEW_DIR)/*.c)
+REVIEW_OBJECT_FILES := $(addprefix $(OBJECT_DIR)/, $(notdir $(REVIEW_SOURCE_FILES:.c=.o)))
 
-# These are the source files and object files for the network library
-NETWORK_DIR := $(SOURCE_DIR)/network
+# These are the source files and object files for the persue library
+PERSUE_DIR := $(SOURCE_DIR)/persue
 
-NETWORK_SOURCE_FILES := $(wildcard $(NETWORK_DIR)/*.c)
-NETWORK_OBJECT_FILES := $(addprefix $(OBJECT_DIR)/, $(notdir $(NETWORK_SOURCE_FILES:.c=.o)))
+PERSUE_SOURCE_FILES := $(wildcard $(PERSUE_DIR)/*.c)
+PERSUE_OBJECT_FILES := $(addprefix $(OBJECT_DIR)/, $(notdir $(PERSUE_SOURCE_FILES:.c=.o)))
+
+# These are the source files and object files for the secure library
+SECURE_DIR := $(SOURCE_DIR)/secure
+
+SECURE_SOURCE_FILES := $(wildcard $(SECURE_DIR)/*.c)
+SECURE_OBJECT_FILES := $(addprefix $(OBJECT_DIR)/, $(notdir $(SECURE_SOURCE_FILES:.c=.o)))
 
 all: master
 
-%: $(OBJECT_DIR)/%.o $(SOURCE_DIR)/%.c $(DEBUG_OBJECT_FILES) $(DEBUG_SOURCE_FILES) $(NETWORK_OBJECT_FILES) $(NETWORK_SOURCE_FILES)
-	$(COMPILER) $(OBJECT_DIR)/$@.o $(DEBUG_OBJECT_FILES) $(NETWORK_OBJECT_FILES) $(LINKER_FLAGS) -o $(BINARY_DIR)/$@
+%: $(OBJECT_DIR)/%.o $(SOURCE_DIR)/%.c $(REVIEW_OBJECT_FILES) $(REVIEW_SOURCE_FILES) $(PERSUE_OBJECT_FILES) $(PERSUE_SOURCE_FILES) $(SECURE_OBJECT_FILES) $(SECURE_SOURCE_FILES)
+	$(COMPILER) $(OBJECT_DIR)/$@.o $(REVIEW_OBJECT_FILES) $(PERSUE_OBJECT_FILES) $(SECURE_OBJECT_FILES) $(LINKER_FLAGS) -o $(BINARY_DIR)/$@
 
 # These are rules for compiling object files out of source files
 $(OBJECT_DIR)/%.o: $(SOURCE_DIR)/*/%.c 

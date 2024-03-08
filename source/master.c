@@ -1,5 +1,5 @@
-#include "debug.h"
-#include "network.h"
+#include "review.h"
+#include "persue.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 
   size_t amount = 3;
   size_t amounts[] = {2, 3, 1};
-  activ_t activs[] = {ACTIV_NONE, ACTIVE_SIGMOID};
+  activ_t activs[] = {ACTIV_NONE, ACTIV_SIGMOID};
   float learnrate = 0.03;
   float momentum = 0.2;
 
