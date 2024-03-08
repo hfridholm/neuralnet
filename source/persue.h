@@ -1,13 +1,15 @@
-#ifndef NETWORK_H
-#define NETWORK_H
+#ifndef PERSUE_H
+#define PERSUE_H
 
-#include "debug.h"
+#include "review.h"
+#include "secure.h"
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <math.h>
 
 // This are identifiers for different activation functions
-typedef enum { ACTIV_NONE, ACTIVE_SIGMOID, ACTIVE_RELU, ACTIVE_TANH, ACTIVE_SOFTMAX } activ_t;
+typedef enum { ACTIV_NONE, ACTIV_SIGMOID, ACTIV_RELU, ACTIV_TANH, ACTIV_SOFTMAX } activ_t;
 
 typedef struct
 {
@@ -32,4 +34,4 @@ extern int network_init(Network* network, size_t amount, const size_t* amounts, 
 
 extern void network_free(Network* network);
 
-#endif // NETWORK_H
+#endif // PERSUE_H

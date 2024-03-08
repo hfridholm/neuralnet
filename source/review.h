@@ -1,5 +1,5 @@
-#ifndef DEBUG_H
-#define DEBUG_H
+#ifndef REVIEW_H
+#define REVIEW_H
 
 #include <stdio.h>
 #include <sys/time.h>
@@ -16,4 +16,4 @@ extern int info_print(const char* format, ...);
 
 extern int format_string(char* buffer, const char* format, ...);
 
-#endif // DEBUG_H
+#endif // REVIEW_H

@@ -1,4 +1,45 @@
-#include "../network.h"
+#include "../persue.h"
+#include "p-activs-intern.h"
+
+size_t network_max_layer_nodes(Network network)
+{
+  size_t maxSize = network.inputs;
+
+  for(size_t index = 0; index < network.amount; index++)
+  {
+    size_t currSize = network.layers[index].amount;
+
+    if(currSize > maxSize) maxSize = currSize;
+  }
+  return maxSize;
+}
+
+int network_forward(float* outputs, Network network, const float* inputs)
+{
+  size_t maxSize = network_max_layer_nodes(network);
+
+  float tempOutputs[maxSize];
+
+  size_t width = network.inputs;
+
+  for(size_t index = 0; index < network.amount; index++)
+  {
+    NetworkLayer layer = network.layers[index];
+
+    float_matrix_vector_dotprod(tempOutputs, layer.weights, layer.amount, width, tempOutputs);
+
+    float_vector_elements_add(tempOutputs, tempOutputs, layer.biases, layer.amount);
+
+    activ_values(tempOutputs, tempOutputs, layer.amount, layer.activ);
+
+    // The width of the next layer is the height of this layer
+    width = layer.amount;
+  }
+  // Width is the size of the last layer (output layer)
+  outputs = float_vector_copy(outputs, tempOutputs, width);
+
+  return 0; // Success
+}
 
 /*
  * Initialize the values of a NetworkLayer struct
@@ -14,8 +55,8 @@ int network_layer_init(NetworkLayer* layer, size_t amount, size_t inputs, activ_
   // If the inputted arguments are bad
   if(layer == NULL || amount <= 0 || inputs <= 0) return 1;
 
-  // layer->weights = float_matrix_create(amount, inputs);
-  // layer->biases = float_vector_create(amount);
+  layer->weights = float_matrix_create(amount, inputs);
+  layer->biases = float_vector_create(amount);
 
   layer->amount = amount;
   layer->activ = activ;
@@ -77,9 +118,9 @@ int network_init(Network* network, size_t amount, const size_t* amounts, const a
  */
 void network_layer_free(NetworkLayer* layer, size_t inputs)
 {
-  // float_matrix_free(&layer->weights, layer->amount, inputs);
+  float_matrix_free(&layer->weights, layer->amount, inputs);
 
-  // float_vector_free(&layer->biases, layer->amount);
+  float_vector_free(&layer->biases, layer->amount);
 }
 
 /*
