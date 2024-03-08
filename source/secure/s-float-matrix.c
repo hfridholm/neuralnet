@@ -1,6 +1,45 @@
 #include "../secure.h"
 
 /*
+ * Create a float matrix array allocated on the HEAP using malloc
+ *
+ * RETURN (float*** matarr)
+ * - SUCCESS | The created float matrix array
+ * - ERROR   | NULL
+ */
+float*** float_matarr_create(size_t amount, size_t height, size_t width)
+{
+  if(amount <= 0 || height <= 0 || width <= 0) return NULL;
+ 
+  float*** matarr = malloc(sizeof(float**) * amount);
+
+  if(matarr == NULL) return NULL;
+
+  for(size_t index = 0; index < amount; index++)
+  {
+    matarr[index] = float_matrix_create(height, width);
+  }
+  return matarr;
+}
+
+/*
+ * Free a float matrix array from the HEAP using free
+ * Also assigns NULL to pointer
+ */
+void float_matarr_free(float**** matarr, size_t amount, size_t height, size_t width)
+{
+  if(*matarr == NULL) return;
+
+  for(size_t index = 0; index < amount; index++)
+  {
+    float_matrix_free((*matarr) + index, height, width);
+  }
+  free(*matarr);
+
+  *matarr = NULL;
+}
+
+/*
  * RETURN
  * - SUCCESS | The filtered matrix result
  * - ERROR   | NULL

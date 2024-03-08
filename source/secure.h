@@ -98,6 +98,11 @@ extern float*   float_matrix_cnvrt_vector(float* vector, float** matrix, size_t 
 // Print
 extern void     float_matrix_print(float** matrix, size_t height, size_t width);
 
+
+extern float*** float_matarr_create(size_t amount, size_t height, size_t width);
+
+extern void float_matarr_free(float**** matarr, size_t amount, size_t height, size_t width);
+
 // Index Array
 
 extern size_t* index_array_shuffled_fill(size_t* array, size_t amount);

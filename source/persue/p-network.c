@@ -20,7 +20,8 @@ int network_forward(float* outputs, Network network, const float* inputs)
 
   size_t maxSize = network_max_layer_nodes(network);
 
-  float tempOutputs[maxSize];
+  float toutputs[maxSize];
+  float_vector_copy(toutputs, inputs, network.inputs);
 
   size_t width = network.inputs;
 
@@ -28,17 +29,17 @@ int network_forward(float* outputs, Network network, const float* inputs)
   {
     NetworkLayer layer = network.layers[index];
 
-    float_matrix_vector_dotprod(tempOutputs, layer.weights, layer.amount, width, tempOutputs);
+    float_matrix_vector_dotprod(toutputs, layer.weights, layer.amount, width, toutputs);
 
-    float_vector_elem_addit(tempOutputs, tempOutputs, layer.biases, layer.amount);
+    float_vector_elem_addit(toutputs, toutputs, layer.biases, layer.amount);
 
-    activ_values(tempOutputs, tempOutputs, layer.amount, layer.activ);
+    activ_values(toutputs, toutputs, layer.amount, layer.activ);
 
     // The width of the next layer is the height of this layer
     width = layer.amount;
   }
   // Width is the size of the last layer (output layer)
-  outputs = float_vector_copy(outputs, tempOutputs, width);
+  outputs = float_vector_copy(outputs, toutputs, width);
 
   return 0; // Success
 }
@@ -57,8 +58,8 @@ int network_layer_init(NetworkLayer* layer, size_t amount, size_t inputs, activ_
   // If the inputted arguments are bad
   if(layer == NULL || amount <= 0 || inputs <= 0) return 1;
 
-  layer->weights = float_matrix_create(amount, inputs);
-  layer->biases = float_vector_create(amount);
+  layer->weights = float_matrix_random_create(amount, inputs, -1.0f, +1.0f);
+  layer->biases = float_vector_random_create(amount, -1.0f, +1.0f);
 
   layer->amount = amount;
   layer->activ = activ;
