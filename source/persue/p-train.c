@@ -1,9 +1,13 @@
 #include "../persue.h"
+#include "../review.h"
+
+#include "p-activs-intern.h"
+#include "p-network-intern.h"
 
 /*
  * Calculate the values of each node in the inputted network from the inputs
  */
-int node_values_create(float** values, Network network, const float* inputs)
+static int node_values_create(float** values, Network network, const float* inputs)
 {
   if(values == NULL || inputs == NULL) return 1;
 
@@ -17,7 +21,7 @@ int node_values_create(float** values, Network network, const float* inputs)
 
     float_matrix_vector_dotprod(values[index], layer.weights, layer.amount, width, values[index - 1]);
 
-    float_vector_elements_add(values[index], values[index], layer.biases, layer.amount);
+    float_vector_elem_addit(values[index], values[index], layer.biases, layer.amount);
 
     activ_values(values[index], values[index], layer.amount, layer.activ);
 
@@ -29,7 +33,7 @@ int node_values_create(float** values, Network network, const float* inputs)
 /*
  *
  */
-int node_derivs_create(float** derivs, Network network, float** values, const float* targets)
+static int node_derivs_create(float** derivs, Network network, float** values, const float* targets)
 {
   if(derivs == NULL || values == NULL || targets == NULL) return 1;
 
@@ -40,7 +44,7 @@ int node_derivs_create(float** derivs, Network network, float** values, const fl
 
   cross_entropy_derivs(derivs[network.amount - 1], values[network.amount], targets, outputLayer.amount);
 
-  active_derivs_apply(derivs[network.amount - 1], values[network.amount], outputLayer.amount, outputLayer.activ);
+  activ_derivs_apply(derivs[network.amount - 1], values[network.amount], outputLayer.amount, outputLayer.activ);
 
   for(size_t index = (network.amount - 1); index >= 1; index--)
   {
@@ -50,9 +54,9 @@ int node_derivs_create(float** derivs, Network network, float** values, const fl
     size_t width  = network.layers[index - 1].amount;
 
     float weightsTransp[layer.amount][height];
-    float_matrix_transpose(weightsTransp, layer.weights, height, width)
+    float_matrix_transp((float**) weightsTransp, layer.weights, height, width);
 
-    float_matrix_vector_dotprod(derivs[index - 1], weightsTransp, width, height, derivs[index]);
+    float_matrix_vector_dotprod(derivs[index - 1], (float**) weightsTransp, width, height, derivs[index]);
 
     activ_derivs_apply(derivs[index - 1], values[index], width, layer.activ);
   }
@@ -67,20 +71,20 @@ int node_derivs_create(float** derivs, Network network, float** values, const fl
  * - const float* inputs  | The inputs
  * - const float* targets | The targets
  */
-int weight_bias_derivs_create(float*** wderivs, float** bderivs, Network network, const float* inputs, const float* targets)
+static int weight_bias_derivs_create(float*** wderivs, float** bderivs, Network network, const float* inputs, const float* targets)
 {
   if(wderivs == NULL || bderivs == NULL || inputs == NULL || targets == NULL) return 1;
+
+  size_t maxSize = network_max_layer_nodes(network);
 
   float nvalues[network.amount + 1][maxSize];
   float nderivs[network.amount][maxSize];
 
-  node_values_create(nvalues, network, inputs);
-  node_derivs_create(nderivs, network, nvalues, targets);
+  node_values_create((float**) nvalues, network, inputs);
+  node_derivs_create((float**) nderivs, network, (float**) nvalues, targets);
 
   for(size_t index = (network.amount - 1); index >= 0; index--)
   {
-    NetworkLayer layer = network.layers[index];
-
     size_t height = network.layers[index].amount;
     size_t width  = network.layers[index - 1].amount;
 
@@ -91,28 +95,34 @@ int weight_bias_derivs_create(float*** wderivs, float** bderivs, Network network
   return 0; // Success!
 }
 
-static int layer_weight_deltas_create(float** wdeltas, float** twdeltas, float** wderivs, size_t height, size_t width, float learnrate, float momentum)
+static int layer_weight_deltas_create(float** wdeltas, float** wderivs, size_t height, size_t width, float learnrate, float momentum)
 {
-  float_matrix_scale_mutli(twdeltas, wderivs, height, width, -learnrate);
+  float twdeltas[height][width]; // Temporary weight delta values
+
+  float_matrix_scale_multi((float**) twdeltas, wderivs, height, width, -learnrate);
 
   if(wdeltas != NULL)
   {
-    float_matrix_scale_mutli(twdeltas, wdeltas, height, width, momentum);
+    float_matrix_scale_multi((float**) twdeltas, wdeltas, height, width, momentum);
 
-    float_matrix_elem_addit(wdeltas, wdeltas, twdeltas, height, width);
+    float_matrix_elem_addit(wdeltas, wdeltas, (float**) twdeltas, height, width);
   }
+  return 0; // Success!
 }
 
-static int layer_bias_deltas_create(float* bdeltas, float* tbdeltas, float* bderivs, size_t height, float learnrate, float momentum)
+static int layer_bias_deltas_create(float* bdeltas, float* bderivs, size_t height, float learnrate, float momentum)
 {
-  float_vector_scale_mutli(tbdeltas, bderivs, height, -learnrate);
+  float tbdeltas[height]; // Temporary bias delta values
+
+  float_vector_scale_multi(tbdeltas, bderivs, height, -learnrate);
 
   if(bdeltas != NULL)
   {
-    float_vector_scale_mutli(tbdeltas, bdeltas, height, momentum);
+    float_vector_scale_multi(tbdeltas, bdeltas, height, momentum);
 
     float_vector_elem_addit(bdeltas, bdeltas, tbdeltas, height);
   }
+  return 0; // Success!
 }
 
 /*
@@ -129,34 +139,31 @@ static int layer_bias_deltas_create(float* bdeltas, float* tbdeltas, float* bder
  * - 0 | Success!
  * - 1 | The inputted arguements are bad
  */
-int weight_bias_deltas_create(float*** wdeltas, float** bdeltas, Network network, const float* inputs, const float* targets)
+static int weight_bias_deltas_create(Network* network, const float* inputs, const float* targets)
 {
-  if(wdeltas == NULL || bdeltas == NULL || inputs == NULL || targets == NULL) return 1;
+  if(inputs == NULL || targets == NULL) return 1;
 
-  size_t maxSize = network_max_layer_nodes(network);
+  size_t maxSize = network_max_layer_nodes(*network);
 
-  float twdeltas[network.amount][maxSize][maxSize]; // Temporary weight delta values
-  float tbdeltas[network.amount][maxSize]; // Temporary bias delta values
+  float wderivs[network->amount][maxSize][maxSize]; // Weight derivatives
+  float bderivs[network->amount][maxSize];          // Bias derivatives
 
-  float wderivs[network.amount][maxSize][maxSize]; // Weight derivatives
-  float bderivs[network.amount][maxSize]; // Bias derivatives
+  weight_bias_derivs_create((float***) wderivs, (float**) bderivs, *network, inputs, targets);
 
-  weight_bias_derivs_create(wderivs, bderivs, network, inputs, targets);
+  size_t width = network->inputs;
 
-  size_t width = network.inputs;
-
-  for(size_t index = 0; index < network.amount; index++)
+  for(size_t index = 0; index < network->amount; index++)
   {
-    NetworkLayer layer = network.layers[index];
+    NetworkLayer* layer = &network->layers[index];
 
-    size_t height = layer.amount;
+    size_t height = layer->amount;
 
-    layer_weight_deltas_create(wdeltas[index], twdelats[index], wderivs[index], height, width, network.learnrate, network.momentum);
+    layer_weight_deltas_create(layer->wdeltas, (float**) wderivs[index], height, width, network->learnrate, network->momentum);
 
-    layer_bias_deltas_create(bdeltas[index], tbdelats[index], bderivs[index], height, network.learnrate, network.momentum);
+    layer_bias_deltas_create(layer->bdeltas, (float*) bderivs[index], height, network->learnrate, network->momentum);
 
     // The width of the next layer is the height of the current layer
-    width = layer.amount;
+    width = layer->amount;
   }
   return 0; // Success!
 }
@@ -168,25 +175,25 @@ int weight_bias_deltas_create(float*** wdeltas, float** bdeltas, Network network
  * - 0 | Success!
  * - 1 | The inputted arguments are bad
  */
-static int network_train_stcast_sample(Network network, const float* inputs, const float* targets)
+int network_train_stcast_sample(Network* network, const float* inputs, const float* targets)
 {
   if(inputs == NULL || targets == NULL) return 1;
 
-  weight_bias_deltas_create(wdeltas, bdeltas, network, inputs, targets);
+  weight_bias_deltas_create(network, inputs, targets);
 
-  size_t width = network.inputs;
+  size_t width = network->inputs;
 
-  for(size_t index = 0; index < network.amount; index++)
+  for(size_t index = 0; index < network->amount; index++)
   {
-    NetworkLayer layer = network.layers[index];
+    NetworkLayer* layer = &network->layers[index];
 
-    size_t height = layer.amount;
+    size_t height = layer->amount;
 
-    float_matrix_elem_addit(layer.weights, layer.weights, wdeltas, height, width);
+    float_matrix_elem_addit(layer->weights, layer->weights, layer->wdeltas, height, width);
     
-    float_vector_elem_addit(layer.biases, layer.biases, bdeltas, height);
+    float_vector_elem_addit(layer->biases, layer->biases, layer->bdeltas, height);
 
-    width = layer.amount;
+    width = layer->amount;
   }
   return 0;
 }
@@ -246,8 +253,12 @@ int network_train_stcast_epochs(Network* network, float** inputs, float** target
 {
   if(network == NULL || inputs == NULL || targets == NULL) return 1;
 
+  info_print("Training stochastically %d epochs", epochs);
+
   for(size_t index = 0; index < epochs; index++)
   {
+    info_print("Training epoch #%d with %d samples", index + 1, amount);
+
     int status = network_train_stcast_epoch(network, inputs, targets, amount);
 
     if(status != 0) return 2;

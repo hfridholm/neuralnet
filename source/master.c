@@ -26,6 +26,21 @@ int main(int argc, char* argv[])
 
   network_init(&network, amount, amounts, activs, learnrate, momentum);
 
+  float inputs[4][2] = {{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}};
+
+  float targets[4][1] = {{0.0f}, {1.0f}, {0.0f}, {1.0f}};
+
+  network_train_stcast_epochs(&network, (float**) inputs, (float**) targets, 4, 1);
+
+  for(size_t index = 0; index < 4; index++)
+  {
+    float outputs[1];
+
+    network_forward((float*) outputs, network, (float*) inputs[index]);
+
+    info_print("[%.1f %.1f] => [%f]\n", inputs[index][0], inputs[index][1], outputs[0]);
+  }
+
   network_free(&network);
 
   return 0;

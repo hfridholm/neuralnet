@@ -30,7 +30,7 @@ int network_forward(float* outputs, Network network, const float* inputs)
 
     float_matrix_vector_dotprod(tempOutputs, layer.weights, layer.amount, width, tempOutputs);
 
-    float_vector_elements_add(tempOutputs, tempOutputs, layer.biases, layer.amount);
+    float_vector_elem_addit(tempOutputs, tempOutputs, layer.biases, layer.amount);
 
     activ_values(tempOutputs, tempOutputs, layer.amount, layer.activ);
 
@@ -62,6 +62,9 @@ int network_layer_init(NetworkLayer* layer, size_t amount, size_t inputs, activ_
 
   layer->amount = amount;
   layer->activ = activ;
+
+  layer->wdeltas = float_matrix_create(amount, inputs);
+  layer->bdeltas = float_vector_create(amount);
 
   return 0; // Success!
 }
@@ -121,8 +124,10 @@ int network_init(Network* network, size_t amount, const size_t* amounts, const a
 void network_layer_free(NetworkLayer* layer, size_t inputs)
 {
   float_matrix_free(&layer->weights, layer->amount, inputs);
-
   float_vector_free(&layer->biases, layer->amount);
+
+  float_matrix_free(&layer->wdeltas, layer->amount, inputs);
+  float_vector_free(&layer->bdeltas, layer->amount);
 }
 
 /*
