@@ -47,7 +47,11 @@ extern int network_forward(float* outputs, Network network, const float* inputs)
 
 extern int network_train_stcast_epochs(Network* network, float** inputs, float** targets, size_t amount, size_t epochs);
 
-extern int network_train_stcast_sample(Network* network, const float* inputs, const float* targets);
+extern int network_train_stcast(Network* network, const float* inputs, const float* targets);
+
+extern int network_train_mini_batch(Network* network, float** inputs, float** targets, size_t amount);
+
+extern int network_train_mini_batch_epochs(Network* network, float** inputs, float** targets, size_t amount, size_t bsize, size_t epochs);
 
 extern float cross_entropy_cost(const float* nodes, const float* targets, size_t amount);
 

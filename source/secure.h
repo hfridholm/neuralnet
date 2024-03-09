@@ -103,6 +103,19 @@ extern float*** float_matarr_create(size_t amount, size_t height, size_t width);
 
 extern void float_matarr_free(float**** matarr, size_t amount, size_t height, size_t width);
 
+
+extern float*** float_matarr_create(size_t amount, size_t height, size_t width);
+
+extern void     float_matarr_free(float**** matarr, size_t amount, size_t height, size_t width);
+
+extern float*** float_matarr_copy(float*** destin, float*** source, size_t amount, size_t height, size_t width);
+
+extern float*** float_matarr_scale_multi(float*** result, float*** matarr, size_t amount, size_t height, size_t width, float scalor);
+
+extern float*** float_matarr_elem_addit(float*** result, float*** matarr1, float*** matarr2, size_t amount, size_t height, size_t width);
+
+extern void     float_matarr_print(float*** matarr, size_t amount, size_t height, size_t width);
+
 // Index Array
 
 extern size_t* index_array_shuffled_fill(size_t* array, size_t amount);

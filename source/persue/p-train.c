@@ -116,6 +116,49 @@ static int weight_bias_derivs_create(float*** wderivs, float** bderivs, Network 
   return 0; // Success!
 }
 
+/*
+ * Calculate the mean weight and bias derivatives of multiple inputs and targets
+ *
+ * PARAMS
+ * - size_t amount | The amount of inputs and targets
+ */
+int weight_bias_mean_derivs_create(float*** wderivs, float** bderivs, Network network, float** inputs, float** targets, size_t amount)
+{
+  if(wderivs == NULL || bderivs == NULL || inputs == NULL || targets == NULL) return 1;
+
+  size_t maxSize = network_max_layer_nodes(network);
+
+  // Sum of the weight derivatives
+  float*** swderivs = float_matarr_create(network.amount, maxSize, maxSize);
+  float** sbderivs = float_matrix_create(network.amount, maxSize);
+
+  // Temporary weight derivatives
+  float*** twderivs = float_matarr_create(network.amount, maxSize, maxSize);
+  float** tbderivs = float_matrix_create(network.amount, maxSize);
+
+  for(size_t index = 0; index < amount; index++)
+  {
+    weight_bias_derivs_create(twderivs, tbderivs, network, inputs[index], targets[index]);
+
+    float_matarr_elem_addit(swderivs, swderivs, twderivs, network.amount, maxSize, maxSize);
+    float_matrix_elem_addit(sbderivs, sbderivs, tbderivs, network.amount, maxSize);
+  }
+
+  // Dividing the sum of the weight/bias derivatives by the batch size, you get the average derivatives
+  float scalor = (1.0f / (float) amount);
+
+  float_matarr_scale_multi(wderivs, swderivs, network.amount, maxSize, maxSize, scalor);
+  float_matrix_scale_multi(bderivs, sbderivs, network.amount, maxSize, scalor);
+
+  float_matarr_free(&twderivs, network.amount, maxSize, maxSize);
+  float_matrix_free(&tbderivs, network.amount, maxSize);
+
+  float_matarr_free(&swderivs, network.amount, maxSize, maxSize);
+  float_matrix_free(&sbderivs, network.amount, maxSize);
+
+  return 0; // Success!
+}
+
 static int layer_weight_deltas_create(float** wdeltas, float** wderivs, size_t height, size_t width, float learnrate, float momentum)
 {
   float** twdeltas = float_matrix_create(height, width);
@@ -161,6 +204,37 @@ static int layer_bias_deltas_create(float* bdeltas, float* bderivs, size_t heigh
 }
 
 /*
+ * Calculate deltas from weight and bias derivatives
+ *
+ * PARAMS
+ *
+ * RETURN (int status)
+ * - 0 | Success!
+ * - 1 |
+ */
+static int weight_bias_deltas_from_derivs_create(Network* network, float*** wderivs, float** bderivs)
+{
+  if(wderivs == NULL || bderivs == NULL) return 1;
+
+  size_t width = network->inputs;
+
+  for(size_t index = 0; index < network->amount; index++)
+  {
+    NetworkLayer* layer = &network->layers[index];
+
+    size_t height = layer->amount;
+
+    layer_weight_deltas_create(layer->wdeltas, wderivs[index], height, width, network->learnrate, network->momentum);
+
+    layer_bias_deltas_create(layer->bdeltas, bderivs[index], height, network->learnrate, network->momentum);
+
+    // The width of the next layer is the height of the current layer
+    width = layer->amount;
+  }
+  return 0; // Success!
+}
+
+/*
  * Create the deltas for both the weights and the biases for every layer (hiddens, output)
  *
  * PARAMS
@@ -187,21 +261,33 @@ static int weight_bias_deltas_create(Network* network, const float* inputs, cons
 
   if(status != 0) error_print("weight_bias_derivs_create");
 
-  size_t width = network->inputs;
+  status = weight_bias_deltas_from_derivs_create(network, wderivs, bderivs);
 
-  for(size_t index = 0; index < network->amount; index++)
-  {
-    NetworkLayer* layer = &network->layers[index];
+  if(status != 0) error_print("weight_bias_deltas_from_derivs_create");
 
-    size_t height = layer->amount;
+  float_matarr_free(&wderivs, network->amount, maxSize, maxSize);
+  float_matrix_free(&bderivs, network->amount, maxSize);
 
-    layer_weight_deltas_create(layer->wdeltas, wderivs[index], height, width, network->learnrate, network->momentum);
+  return 0; // Success!
+}
 
-    layer_bias_deltas_create(layer->bdeltas, bderivs[index], height, network->learnrate, network->momentum);
+static int weight_bias_mean_deltas_create(Network* network, float** inputs, float** targets, size_t amount)
+{
+  if(inputs == NULL || targets == NULL) return 1;
 
-    // The width of the next layer is the height of the current layer
-    width = layer->amount;
-  }
+  size_t maxSize = network_max_layer_nodes(*network);
+
+  float*** wderivs = float_matarr_create(network->amount, maxSize, maxSize); // Weight derivatives
+  float** bderivs  = float_matrix_create(network->amount, maxSize);          // Bias derivatives
+
+  int status = weight_bias_mean_derivs_create(wderivs, bderivs, *network, inputs, targets, amount);
+
+  if(status != 0) error_print("weight_bias_mean_derivs_create");
+
+  status = weight_bias_deltas_from_derivs_create(network, wderivs, bderivs);
+
+  if(status != 0) error_print("weight_bias_deltas_from_derivs_create");
+
   float_matarr_free(&wderivs, network->amount, maxSize, maxSize);
   float_matrix_free(&bderivs, network->amount, maxSize);
 
@@ -217,7 +303,7 @@ float cost = 0;
  * - 0 | Success!
  * - 1 | The inputted arguments are bad
  */
-int network_train_stcast_sample(Network* network, const float* inputs, const float* targets)
+int network_train_stcast(Network* network, const float* inputs, const float* targets)
 {
   if(inputs == NULL || targets == NULL) return 1;
 
@@ -276,7 +362,7 @@ static int network_train_stcast_epoch(Network* network, float** inputs, float** 
   {
     size_t randomIndex = randomIndexes[index];
 
-    int status = network_train_stcast_sample(network, inputs[randomIndex], targets[randomIndex]);
+    int status = network_train_stcast(network, inputs[randomIndex], targets[randomIndex]);
 
     if(status != 0) return 1;
   }
@@ -311,6 +397,97 @@ int network_train_stcast_epochs(Network* network, float** inputs, float** target
     // info_print("Training epoch #%d with %d samples", index + 1, amount);
 
     int status = network_train_stcast_epoch(network, inputs, targets, amount);
+
+    if(status != 0) return 2;
+
+    printf("Mean Cost #%02ld: %f\n", index + 1, cost / amount);
+
+    cost = 0;
+  }
+  return 0;
+}
+
+/*
+ * PARAMS
+ * - Network* network | The neural network
+ * - float** inputs   |
+ * - float** targets  |
+ * - size_t amount    | The size of the mini batch (the amount of inputs and targets)
+ */
+int network_train_mini_batch(Network* network, float** inputs, float** targets, size_t amount)
+{
+  if(inputs == NULL || targets == NULL) return 1;
+
+  int status = weight_bias_mean_deltas_create(network, inputs, targets, amount);
+  
+  if(status != 0) error_print("weight_bias_deltas_create");
+
+  size_t width = network->inputs;
+
+  for(size_t index = 0; index < network->amount; index++)
+  {
+    NetworkLayer* layer = &network->layers[index];
+
+    size_t height = layer->amount;
+
+    float_matrix_elem_addit(layer->weights, layer->weights, layer->wdeltas, height, width);
+    
+    float_vector_elem_addit(layer->biases, layer->biases, layer->bdeltas, height);
+
+    width = layer->amount;
+  }
+
+  for(size_t index = 0; index < amount; index++)
+  {
+    float outputs[1];
+
+    network_forward(outputs, *network, inputs[index]);
+
+    cost += cross_entropy_cost(outputs, targets[index], 1);
+  }
+
+  return 0;
+}
+
+static int network_train_mini_batch_epoch(Network* network, float** inputs, float** targets, size_t amount, size_t bsize)
+{
+  for(size_t start = 0; start < amount; start += bsize)
+  {
+    size_t stop = (start + bsize);
+    // The current size is bsize (the batch size), apart from at the end
+    size_t csize = (stop <= amount) ? bsize : (amount - start); 
+
+    // By adding (start) to the inputs pointer, I shift the passed argument
+    // array to start (start) amount of elements later
+    int status = network_train_mini_batch(network, inputs + start, targets + start, csize);
+
+    if(status != 0) return 1;
+  }
+  return 0;
+}
+
+/*
+ * PARAMS
+ * - Network* network |
+ * - float** inputs   |
+ * - float** targets  |
+ * - size_t amount    |
+ * - size_t bsize     |
+ * - size_t epochs    |
+ *
+ * RETURN (int status)
+ * - 0 | Success!
+ * - 1 | The inputted arguments are bad
+ */
+int network_train_mini_batch_epochs(Network* network, float** inputs, float** targets, size_t amount, size_t bsize, size_t epochs)
+{
+  if(network == NULL || inputs == NULL || targets == NULL) return 1;
+
+  info_print("Training mini batch %d epochs", epochs);
+
+  for(size_t index = 0; index < epochs; index++)
+  {
+    int status = network_train_mini_batch_epoch(network, inputs, targets, amount, bsize);
 
     if(status != 0) return 2;
 
