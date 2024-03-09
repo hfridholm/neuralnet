@@ -2,7 +2,7 @@
 
 static float sigmoid_value(float value)
 {
-  return (1 / (1 + exp(-value)) );
+  return (1 / (1 + exp(-value)));
 }
 
 static float sigmoid_deriv(float value)
@@ -108,11 +108,13 @@ static float* softmax_derivs_apply(float* result, const float* values, size_t am
 {
   if(result == NULL || values == NULL) return NULL;
  
-  float activDerivs[amount][amount];
+  float** derivs = float_matrix_create(amount, amount);
 
-  softmax_derivs((float**) activDerivs, values, amount);
+  softmax_derivs(derivs, values, amount);
 
-  float_matrix_vector_dotprod(result, (float**) activDerivs, amount, amount, values);
+  float_matrix_vector_dotprod(result, derivs, amount, amount, values);
+
+  float_matrix_free(&derivs, amount, amount);
 
   return result;
 }
@@ -124,15 +126,10 @@ static float* sigmoid_derivs_apply(float* derivs, const float* values, size_t am
 {
   if(derivs == NULL || values == NULL) return NULL;
 
-  float activDerivs[amount];
-
   for(size_t index = 0; index < amount; index++)
   {
-    activDerivs[index] = sigmoid_deriv(values[index]);
+    derivs[index] *= sigmoid_deriv(values[index]);
   }
-
-  float_vector_elem_multi(derivs, derivs, activDerivs, amount);
-
   return derivs;
 }
 
@@ -140,15 +137,10 @@ static float* relu_derivs_apply(float* derivs, const float* values, size_t amoun
 {
   if(derivs == NULL || values == NULL) return NULL;
 
-  float activDerivs[amount];
-
   for(size_t index = 0; index < amount; index++)
   {
-    activDerivs[index] = relu_deriv(values[index]);
+    derivs[index] *= relu_deriv(values[index]);
   }
-
-  float_vector_elem_multi(derivs, derivs, activDerivs, amount);
-
   return derivs;
 }
 
@@ -156,15 +148,10 @@ static float* tanh_derivs_apply(float* derivs, const float* values, size_t amoun
 {
   if(derivs == NULL || values == NULL) return NULL;
 
-  float activDerivs[amount];
-
   for(size_t index = 0; index < amount; index++)
   {
-    activDerivs[index] = tanh_deriv(values[index]);
+    derivs[index] *= tanh_deriv(values[index]);
   }
-
-  float_vector_elem_multi(derivs, derivs, activDerivs, amount);
-
   return derivs;
 }
 

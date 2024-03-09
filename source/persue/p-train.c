@@ -122,9 +122,13 @@ static int layer_weight_deltas_create(float** wdeltas, float** wderivs, size_t h
 
   float_matrix_scale_multi(twdeltas, wderivs, height, width, -learnrate);
 
-  if(wdeltas != NULL && false) // Take away this blocker!
+  // If old weight deltas exist, add a small part of the old deltas to the new deltas
+  // This keeps the "momentum" going
+  // Note: If the old deltas don't exist (the values are 0), then no this will have no effect
+  if(wdeltas != NULL)
   {
-    float_matrix_scale_multi(twdeltas, wdeltas, height, width, momentum);
+    // Old weight deltas (wdeltas) x momentum + new weight deltas (twdeltas)
+    float_matrix_scale_multi(wdeltas, wdeltas, height, width, momentum);
 
     float_matrix_elem_addit(wdeltas, wdeltas, twdeltas, height, width);
   }
@@ -141,9 +145,13 @@ static int layer_bias_deltas_create(float* bdeltas, float* bderivs, size_t heigh
 
   float_vector_scale_multi(tbdeltas, bderivs, height, -learnrate);
 
-  if(bdeltas != NULL) // Take away this blocker!
+  // If old weight deltas exist, add a small part of the old deltas to the new deltas
+  // This keeps the "momentum" going
+  // Note: If the old deltas don't exist (the values are 0), then no this will have no effect
+  if(bdeltas != NULL)
   {
-    float_vector_scale_multi(tbdeltas, bdeltas, height, momentum);
+    // Old weight deltas (bdeltas) x momentum + new weight deltas (tbdeltas)
+    float_vector_scale_multi(bdeltas, bdeltas, height, momentum);
 
     float_vector_elem_addit(bdeltas, bdeltas, tbdeltas, height);
   }
@@ -200,6 +208,8 @@ static int weight_bias_deltas_create(Network* network, const float* inputs, cons
   return 0; // Success!
 }
 
+float cost = 0;
+
 /*
  * Train the network stochastically on a single sample
  *
@@ -229,6 +239,13 @@ int network_train_stcast_sample(Network* network, const float* inputs, const flo
 
     width = layer->amount;
   }
+
+  float outputs[1];
+
+  network_forward(outputs, *network, inputs);
+
+  cost += cross_entropy_cost(outputs, targets, 1);
+
   return 0;
 }
 
@@ -296,6 +313,10 @@ int network_train_stcast_epochs(Network* network, float** inputs, float** target
     int status = network_train_stcast_epoch(network, inputs, targets, amount);
 
     if(status != 0) return 2;
+
+    printf("Mean Cost #%02ld: %f\n", index + 1, cost / amount);
+
+    cost = 0;
   }
   return 0;
 }

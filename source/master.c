@@ -14,7 +14,8 @@ extern size_t network_max_layer_nodes(Network network);
 
 int main(int argc, char* argv[])
 {
-  srand(time(NULL));
+  // srand(time(NULL));
+  srand(420);
 
   info_print("Neural Network");
 
@@ -43,8 +44,8 @@ int main(int argc, char* argv[])
   size_t amount = 7;
   size_t amounts[] = {2, 8, 8, 16, 8, 8, 1};
   activ_t activs[] = {ACTIV_RELU, ACTIV_RELU, ACTIV_RELU, ACTIV_RELU, ACTIV_RELU, ACTIV_SIGMOID};
-  float learnrate = 0.0009;
-  float momentum = 0.1;
+  float learnrate = 0.01;
+  float momentum = 0;
 
   int status = network_init(&network, amount, amounts, activs, learnrate, momentum);
 
@@ -53,38 +54,13 @@ int main(int argc, char* argv[])
   network_print(network);
 
 
-  network_train_stcast_epochs(&network, inputs, targets, imgWidth * imgHeight, 1000);
-
-
-  float cost = 0;
-
-  for(size_t yValue = 0; yValue < imgHeight; yValue++)
-  {
-    for(size_t xValue = 0; xValue < imgWidth; xValue++)
-    {
-      float outputs[1];
-
-      float normX = (float) xValue / (imgWidth - 1);
-      float normY = (float) yValue / (imgHeight - 1);
-
-      float outInputs[2] = {normX, normY};
-
-      network_forward(outputs, network, outInputs);
-
-      size_t index = (yValue * imgWidth + xValue);
-
-      cost += cross_entropy_cost(outputs, targets[index], 1);
-    }
-  }
-  cost /= (imgHeight * imgWidth);
-
-  printf("Mean Cost: %f\n", cost);
+  network_train_stcast_epochs(&network, inputs, targets, imgWidth * imgHeight, 1);
 
   
   size_t outWidth = 256;
   size_t outHeight = 256;
 
-  float* outPixels = float_vector_create(outWidth * outHeight);
+  float outPixels[outWidth * outHeight];
 
   for(size_t yValue = 0; yValue < outHeight; yValue++)
   {
@@ -108,8 +84,6 @@ int main(int argc, char* argv[])
   char outputPath[128] = "result.png";
 
   image_values_write(outputPath, outPixels, outWidth, outHeight);
-
-  float_vector_free(&outPixels, outWidth * outHeight);
 
 
   float_matrix_free(&inputs, imgWidth * imgHeight, 2);
