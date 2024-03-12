@@ -1,5 +1,6 @@
 #include "review.h"
 #include "persue.h"
+#include "wonder.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,7 +54,7 @@ int main(int argc, char* argv[])
 
   network_print(network);
 
-
+  
   network_train_mini_batch_epochs(&network, inputs, targets, imgWidth * imgHeight, 10, 100);
 
   

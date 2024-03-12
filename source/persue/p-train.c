@@ -483,10 +483,14 @@ int network_train_mini_batch_epochs(Network* network, float** inputs, float** ta
 {
   if(network == NULL || inputs == NULL || targets == NULL) return 1;
 
-  info_print("Training mini batch %d epochs", epochs);
+  info_print("Training (epochs: %ld bsize: %ld amount: %ld)", epochs, bsize, amount);
 
   for(size_t index = 0; index < epochs; index++)
   {
+    int procent = 100 * ((float) (index + 1) / (float) epochs);
+
+    info_print("Training (epoch: #%ld progress: %d%%)", index + 1, procent);
+
     int status = network_train_mini_batch_epoch(network, inputs, targets, amount, bsize);
 
     if(status != 0) return 2;

@@ -9,9 +9,6 @@
 #include <math.h>
 #include <errno.h>
 
-#include "stb_image.h"
-#include "stb_image_write.h"
-
 // This are identifiers for different activation functions
 typedef enum { ACTIV_NONE, ACTIV_SIGMOID, ACTIV_RELU, ACTIV_TANH, ACTIV_SOFTMAX } activ_t;
 
@@ -54,10 +51,5 @@ extern int network_train_mini_batch(Network* network, float** inputs, float** ta
 extern int network_train_mini_batch_epochs(Network* network, float** inputs, float** targets, size_t amount, size_t bsize, size_t epochs);
 
 extern float cross_entropy_cost(const float* nodes, const float* targets, size_t amount);
-
-
-extern int image_values_write(const char* filepath, const float* values, size_t width, size_t height);
-
-extern float** image_values_matrix_read(size_t* width, size_t* height, const char* filepath);
 
 #endif // PERSUE_H

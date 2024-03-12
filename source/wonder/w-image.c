@@ -1,4 +1,4 @@
-#include "../persue.h"
+#include "../wonder.h"
 
 static int image_pixels_write(const char* filepath, const uint8_t* pixels, size_t width, size_t height)
 {

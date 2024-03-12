@@ -33,11 +33,11 @@ char* time_format_string(char* buffer, struct timezone* timezone)
  * - const char* specifier | The argument format specifier
  * - va_list args          | The va_list argument list
  *
- * RETURN
+ * RETURN (int amount)
  * - SUCCESS | The number of printed characters
  * - ERROR   | A negative value
  */
-bool format_specifier_arg_append(char* buffer, const char* specifier, va_list args)
+static int format_specifier_arg_append(char* buffer, const char* specifier, va_list args)
 {
   if(!strncmp(specifier, "d", 1))
   {
@@ -51,7 +51,7 @@ bool format_specifier_arg_append(char* buffer, const char* specifier, va_list ar
 
     return sprintf(buffer, "%ld", arg);
   }
-  else if(!strncmp(specifier, "lld", 2))
+  else if(!strncmp(specifier, "lld", 3))
   {
     long long int arg = va_arg(args, long long int);
 
@@ -88,7 +88,7 @@ bool format_specifier_arg_append(char* buffer, const char* specifier, va_list ar
  * - SUCCESS | The number of printed characters
  * - ERROR   | A negative value
  */
-int format_arg_append(char* buffer, const char* format, int* fIndex, va_list args)
+static int format_arg_append(char* buffer, const char* format, int* fIndex, va_list args)
 {
   char specifier[strlen(format)];
   memset(specifier, '\0', sizeof(specifier));
@@ -112,13 +112,25 @@ int format_arg_append(char* buffer, const char* format, int* fIndex, va_list arg
  * - SUCCESS | The number of printed characters
  * - ERROR   | A negative value
  */
-int format_args_string(char* buffer, const char* format, va_list args) {
-  int bIndex = 0;
+static int format_args_string(char* buffer, const char* format, va_list args) {
+  size_t flength = strlen(format);
 
-  for(int fIndex = 0; fIndex < strlen(format); fIndex++)
+  size_t bIndex = 0;
+
+  for(int fIndex = 0; fIndex < flength; fIndex++)
   {
     if(format[fIndex] == '%')
     {
+      // If the format string contians (%%)
+      if(fIndex < (flength - 1) && format[fIndex + 1] == '%')
+      {
+        buffer[bIndex++] = '%';
+
+        fIndex++;
+
+        continue;
+      }
+
       int status = format_arg_append(buffer + bIndex, format, &fIndex, args);
 
       // If failed to append format argument, return error
@@ -139,7 +151,7 @@ int format_args_string(char* buffer, const char* format, va_list args) {
  * - SUCCESS | The number of printed characters
  * - ERROR   | A negative value
  */
-int debug_args_print(FILE* stream, const char* title, const char* format, va_list args)
+static int debug_args_print(FILE* stream, const char* title, const char* format, va_list args)
 {
   char timeString[32];
   memset(timeString, '\0', sizeof(timeString));
