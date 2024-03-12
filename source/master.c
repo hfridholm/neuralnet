@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
   size_t amount = 7;
   size_t amounts[] = {2, 8, 16, 16, 16, 8, 1};
   activ_t activs[] = {ACTIV_RELU, ACTIV_TANH, ACTIV_RELU, ACTIV_SIGMOID, ACTIV_TANH, ACTIV_SIGMOID};
-  float learnrate = 0.001;
+  float learnrate = 0.0009;
   float momentum = 0.1;
 
   int status = network_init(&network, amount, amounts, activs, learnrate, momentum);
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
   network_print(network);
 
   
-  network_train_mini_batch_epochs(&network, inputs, targets, imgWidth * imgHeight, 10, 100);
+  network_train_stcast_epochs(&network, inputs, targets, imgWidth * imgHeight, 10000);
 
   
   size_t outWidth = 256;

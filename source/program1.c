@@ -6,19 +6,18 @@
 
 int main(int argc, char* argv[])
 {
-  srand(time(NULL));
+  // srand(time(NULL));
+  srand(420);
 
   error_print("Neural Network");
-
-  printf("Random float: %.2f\n", float_random_create(0, 100));
 
   Network network;
 
   size_t amount = 3;
-  size_t amounts[] = {2, 8, 1};
+  size_t amounts[] = {2, 4, 1};
   activ_t activs[] = {ACTIV_SIGMOID, ACTIV_SIGMOID};
-  float learnrate = 0.1;
-  float momentum = 0.0;
+  float learnrate = 0.01;
+  float momentum = 0.01;
 
   network_init(&network, amount, amounts, activs, learnrate, momentum);
 
@@ -52,15 +51,23 @@ int main(int argc, char* argv[])
   network_forward(toutputs, network, inputs[0]);
   printf("===== WEIGHTS BEFORE =====\n");
   float_matrix_print(network.layers[0].weights, network.layers[0].amount, network.inputs);
+  float_matrix_print(network.layers[1].weights, network.layers[1].amount, network.layers[0].amount);
   printf("===== WEIGHTS BEFORE END =====\n");
+  float_vector_print(network.layers[0].biases, network.layers[0].amount);
+  float_vector_print(network.layers[1].biases, network.layers[1].amount);
+  printf("===== BIAS BEFORE END ========\n");
   printf("Cost: %.2f\n", cross_entropy_cost(toutputs, targets[0], outputAmount));
 
-  network_train_stcast_epochs(&network, inputs, targets, 4, 1000);
+  network_train_stcast_epochs(&network, inputs, targets, 1, 10);
 
   network_forward(toutputs, network, inputs[0]);
   printf("===== WEIGHTS AFTER =====\n");
   float_matrix_print(network.layers[0].weights, network.layers[0].amount, network.inputs);
+  float_matrix_print(network.layers[1].weights, network.layers[1].amount, network.layers[0].amount);
   printf("===== WEIGHTS AFTER END =====\n");
+  float_vector_print(network.layers[0].biases, network.layers[0].amount);
+  float_vector_print(network.layers[1].biases, network.layers[1].amount);
+  printf("===== BIAS AFTER END ========\n");
   printf("Cost: %.2f\n", cross_entropy_cost(toutputs, targets[0], outputAmount));
 
   for(size_t index = 0; index < 4; index++)

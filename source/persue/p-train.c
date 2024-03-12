@@ -394,7 +394,7 @@ int network_train_stcast_epochs(Network* network, float** inputs, float** target
 
   for(size_t index = 0; index < epochs; index++)
   {
-    // info_print("Training epoch #%d with %d samples", index + 1, amount);
+    info_print("Training epoch #%d with %d samples", index + 1, amount);
 
     int status = network_train_stcast_epoch(network, inputs, targets, amount);
 
