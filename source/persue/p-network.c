@@ -32,11 +32,13 @@ int network_forward(float* outputs, Network network, const float* inputs)
   {
     NetworkLayer layer = network.layers[index];
 
-    float_matrix_vector_dotprod(toutputs, layer.weights, layer.amount, width, toutputs);
+    size_t height = layer.amount;
+
+    float_matrix_vector_dotprod(toutputs, layer.weights, height, width, toutputs);
 
     float_vector_elem_addit(toutputs, toutputs, layer.biases, layer.amount);
 
-    activ_values(toutputs, toutputs, layer.amount, layer.activ);
+    activ_values(toutputs, toutputs, height, layer.activ);
 
     // The width of the next layer is the height of this layer
     width = layer.amount;

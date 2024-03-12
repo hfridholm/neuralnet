@@ -256,14 +256,19 @@ float** float_matrix_vector_addit(float** result, float** matrix, const float* v
 int float_matrix_vector_dotprod(float* result, float** matrix, size_t height, size_t width, const float* vector)
 {
   if(result == NULL || matrix == NULL || vector == NULL) return 1;
+
+  float tresult[height];
+  memset(tresult, 0.0f, sizeof(float) * height);
  
   for(size_t hIndex = 0; hIndex < height; hIndex++)
   {
     for(size_t wIndex = 0; wIndex < width; wIndex++)
     {
-      result[hIndex] += (matrix[hIndex][wIndex] * vector[wIndex]);
+      tresult[hIndex] += (matrix[hIndex][wIndex] * vector[wIndex]);
     }
   }
+  float_vector_copy(result, tresult, height);
+
   return 0;
 }
 
