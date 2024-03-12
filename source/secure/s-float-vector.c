@@ -88,25 +88,6 @@ float* float_vector_random_create(size_t length, float min, float max)
 }
 
 /*
- * Fills a vector with random floats between min and max
- * The function modifies the inputted vector
- *
- * RETURN
- * - SUCCESS | The filled vector
- * - ERROR   | NULL
- */
-float* float_vector_random_fill(float* vector, size_t length, float min, float max)
-{
-  if(vector == NULL) return NULL;
-
-  for(size_t index = 0; index < length; index++)
-  {
-    vector[index] = float_random_create(min, max);
-  }
-  return vector;
-}
-
-/*
  * Scale all the vectors values by a scalor
  *
  * RETURN
@@ -120,42 +101,6 @@ float* float_vector_scale_multi(float* result, const float* vector, size_t lengt
   for(size_t index = 0; index < length; index++)
   {
     result[index] = (vector[index] * scalor);
-  }
-  return result;
-}
-
-/*
- * Add a scalor to every value of the inputted vector
- * 
- * RETURN
- * - SUCCESS | float* result
- * - ERROR   | NULL
- */
-float* float_vector_scale_addit(float* result, const float* vector, size_t length, float scalor)
-{
-  if(result == NULL || vector == NULL) return NULL;
-
-  for(size_t index = 0; index < length; index++)
-  {
-    result[index] = (vector[index] + scalor);
-  }
-  return result;
-}
-
-/*
- * Multiply the values of two vectors with each other
- *
- * RETURN
- * - SUCCESS | The vector with multiplied values
- * - ERROR   | NULL
- */
-float* float_vector_elem_multi(float* result, const float* vector1, const float* vector2, size_t length)
-{
-  if(result == NULL || vector1 == NULL || vector2 == NULL) return NULL;
-
-  for(size_t index = 0; index < length; index++)
-  {
-    result[index] = (vector1[index] * vector2[index]);
   }
   return result;
 }
@@ -200,24 +145,6 @@ float** float_vector_dotprod(float** result, const float* vector1, size_t length
 }
 
 /*
- * Create a new vector and copy the values of the inputted vector
- *
- * RETURN
- * - SUCCESS | The newly created duplicated vector
- * - ERROR   | NULL
- */
-float* float_vector_duplic(const float* vector, size_t length)
-{
-  if(vector == NULL || length <= 0) return NULL;
-
-  float* duplic = malloc(sizeof(float) * length);
-
-  if(duplic == NULL) return NULL;
-
-  return memmove(duplic, vector, sizeof(float) * length);
-}
-
-/*
  * Copy the content of source to destin, using memmove
  *
  * RETURN (same as memmove)
@@ -229,22 +156,6 @@ float* float_vector_copy(float* destin, const float* source, size_t length)
   if(destin == NULL || source == NULL) return NULL;
 
   return memmove(destin, source, sizeof(float) * length);
-}
-
-/*
- * Return the sum of the vectors values
- */
-float float_vector_sum(const float* vector, size_t length)
-{
-  float sum = 0;
-
-  if(vector == NULL) return sum;
-
-  for(size_t index = 0; index < length; index++)
-  {
-    sum += vector[index];
-  }
-  return sum;
 }
 
 /*

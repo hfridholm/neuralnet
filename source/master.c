@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
   network_print(network);
 
   
-  network_train_stcast_epochs(&network, inputs, targets, imgWidth * imgHeight, 10000);
+  network_train_mini_batch_epochs(&network, inputs, targets, imgWidth * imgHeight, 1, 10000);
 
   
   size_t outWidth = 256;

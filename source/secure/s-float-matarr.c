@@ -40,46 +40,6 @@ void float_matarr_free(float**** matarr, size_t amount, size_t height, size_t wi
 }
 
 /*
- * Create a matrix array with random values
- *
- * RETURN
- * - SUCCESS | Matrix array with random values
- * - ERROR   | NULL
- */
-float*** float_matarr_random_create(size_t amount, size_t height, size_t width, float min, float max)
-{
-  if(amount <= 0 || height <= 0 || width <= 0) return NULL;
- 
-  float*** matarr = malloc(sizeof(float**) * amount);
-
-  if(matarr == NULL) return NULL;
-
-  for(size_t index = 0; index < amount; index++)
-  {
-    matarr[index] = float_matrix_random_create(height, width, min, max);
-  }
-  return matarr;
-}
-
-/*
- * Fill a matrix array with random values
- *
- * RETURN
- * - SUCCESS | The filled matrix array with random values
- * - ERROR   | NULL
- */
-float*** float_matarr_random_fill(float*** matarr, size_t amount, size_t height, size_t width, float min, float max)
-{
-  if(matarr == NULL) return NULL;
-
-  for(size_t index = 0; index < amount; index++)
-  {
-    float_matrix_random_fill(matarr[index], height, width, min, max);
-  }
-  return matarr;
-}
-
-/*
  * Add the values of two matrix arrays together with each other
  *
  * RETURN
@@ -113,24 +73,6 @@ float*** float_matarr_scale_multi(float*** result, float*** matarr, size_t amoun
     float_matrix_scale_multi(result[index], matarr[index], height, width, scalor);
   }
   return result;
-}
-
-/*
- * Copy the content of source to destin
- *
- * RETURN
- * - SUCCESS | float*** destin
- * - ERROR   | NULL
- */
-float*** float_matarr_copy(float*** destin, float*** source, size_t amount, size_t height, size_t width)
-{
-  if(destin == NULL || source == NULL) return NULL;
-
-  for(size_t index = 0; index < amount; index++)
-  {
-    float_matrix_copy(destin[index], source[index], height, width);
-  }
-  return destin;
 }
 
 /*
